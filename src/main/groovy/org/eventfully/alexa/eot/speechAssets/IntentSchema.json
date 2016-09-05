@@ -1,16 +1,13 @@
 {
   "intents": [
     {
-      "intent": "MyColorIsIntent",
+      "intent": "EOTModeIntent",
       "slots": [
         {
-          "name": "Color",
-          "type": "LIST_OF_COLORS"
+          "name": "Mode",
+          "type": "LIST_OF_MODES"
         }
       ]
-    },
-    {
-      "intent": "WhatsMyColorIntent"
     }
   ]
 }

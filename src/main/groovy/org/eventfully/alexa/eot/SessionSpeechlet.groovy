@@ -1,32 +1,23 @@
 package org.eventfully.alexa.eot
 
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.amazon.speech.slu.Intent;
-import com.amazon.speech.slu.Slot;
-import com.amazon.speech.speechlet.IntentRequest;
-import com.amazon.speech.speechlet.LaunchRequest;
-import com.amazon.speech.speechlet.Session;
-import com.amazon.speech.speechlet.SessionEndedRequest;
-import com.amazon.speech.speechlet.SessionStartedRequest;
-import com.amazon.speech.speechlet.Speechlet;
-import com.amazon.speech.speechlet.SpeechletException;
-import com.amazon.speech.speechlet.SpeechletResponse;
-import com.amazon.speech.ui.PlainTextOutputSpeech;
-import com.amazon.speech.ui.Reprompt;
-import com.amazon.speech.ui.SimpleCard;
+import com.amazon.speech.slu.Intent
+import com.amazon.speech.slu.Slot
+import com.amazon.speech.speechlet.*
+import com.amazon.speech.ui.PlainTextOutputSpeech
+import com.amazon.speech.ui.Reprompt
+import com.amazon.speech.ui.SimpleCard
+import groovy.util.logging.Slf4j
+import org.apache.commons.lang3.StringUtils
 
 /**
  * This sample shows how to create a simple speechlet for handling intent requests and managing
  * session interactions.
  */
+@Slf4j
 public class SessionSpeechlet implements Speechlet {
-    private static final Logger log = LoggerFactory.getLogger(SessionSpeechlet.class);
 
-    private static final String COLOR_KEY = "COLOR";
-    private static final String COLOR_SLOT = "Color";
+    private static final String MODE_KEY = "MODES";
+    private static final String MODE_SLOT = "Modes";
 
     @Override
     public void onSessionStarted(final SessionStartedRequest request, final Session session)
@@ -53,13 +44,12 @@ public class SessionSpeechlet implements Speechlet {
         // Get intent from the request object.
         Intent intent = request.getIntent();
         String intentName = (intent != null) ? intent.getName() : null;
+        log.info("intentName: $intentName")
 
         // Note: If the session is started with an intent, no welcome message will be rendered;
         // rather, the intent specific response will be returned.
-        if ("MyColorIsIntent".equals(intentName)) {
-            return setColorInSession(intent, session);
-        } else if ("WhatsMyColorIntent".equals(intentName)) {
-            return getColorFromSession(intent, session);
+        if ('EOTModeIntent'.equals(intentName)) {
+            return setModeInSession(intent, session);
         } else {
             throw new SpeechletException("Invalid Intent");
         }
@@ -80,10 +70,14 @@ public class SessionSpeechlet implements Speechlet {
      */
     private SpeechletResponse getWelcomeResponse() {
         // Create the welcome message.
-        String speechText = "Welcome to the Alexa Skills Kit sample. Please tell me your favorite color by saying, my favorite color is red"
-        String repromptText = "Please tell me your favorite color by saying, my favorite color is red";
+        String speechText = "Starting Integrations."
+        String repromptText = "Do you want to work with operations or development";
 
         return getSpeechletResponse(speechText, repromptText, true);
+    }
+
+    private SpeechletResponse workwithOperations(final Intent intent, final Session session) {
+
     }
 
     /**
@@ -94,31 +88,34 @@ public class SessionSpeechlet implements Speechlet {
      *            intent for the request
      * @return SpeechletResponse spoken and visual response the given intent
      */
-    private SpeechletResponse setColorInSession(final Intent intent, final Session session) {
+    private SpeechletResponse setModeInSession(final Intent intent, final Session session) {
         // Get the slots from the intent.
         Map<String, Slot> slots = intent.getSlots();
 
         // Get the color slot from the list of slots.
-        Slot favoriteColorSlot = slots.get(COLOR_SLOT);
+        Slot modeSlot = slots.get(MODE_SLOT);
         String speechText, repromptText;
+        println intent.dump()
+        println session.dump()
 
         // Check for favorite color and create output to user.
-        if (favoriteColorSlot != null) {
+        if ( modeSlot != null) {
             // Store the user's favorite color in the Session and create response.
-            String favoriteColor = favoriteColorSlot.getValue();
-            session.setAttribute(COLOR_KEY, favoriteColor);
-            speechText =
-                    String.format("I now know that your favorite color is %s. You can ask me your "
-                            + "favorite color by saying, what's my favorite color?", favoriteColor);
-            repromptText =
-                    "You can ask me your favorite color by saying, what's my favorite color?";
+            String currentMode =  modeSlot.getValue();
+            session.setAttribute(MODE_KEY, currentMode);
+            if (currentMode == 'operations'){
+                speechText = "Ask me about operational statistics."
+
+            } else if (currentMode == 'development' ){
+                speechText = "What do you want to do:"
+                repromptText = "Create or configure?"
+            }
+
 
         } else {
             // Render an error since we don't know what the users favorite color is.
-            speechText = "I'm not sure what your favorite color is, please try again";
-            repromptText =
-                    "I'm not sure what your favorite color is. You can tell me your favorite "
-            +"color by saying, my favorite color is red";
+            speechText = "I'm not sure what you want to work with, please try again";
+
         }
 
         return getSpeechletResponse(speechText, repromptText, true);
@@ -137,7 +134,7 @@ public class SessionSpeechlet implements Speechlet {
         boolean isAskResponse = false;
 
         // Get the user's favorite color from the session.
-        String favoriteColor = (String) session.getAttribute(COLOR_KEY);
+        String favoriteColor = (String) session.getAttribute(MODE_KEY);
 
         // Check to make sure user's favorite color is set in the session.
         if (StringUtils.isNotEmpty(favoriteColor)) {
