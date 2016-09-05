@@ -16,8 +16,8 @@ import org.apache.commons.lang3.StringUtils
 @Slf4j
 public class SessionSpeechlet implements Speechlet {
 
-    private static final String MODE_KEY = "MODES";
-    private static final String MODE_SLOT = "Modes";
+    private static final String MODE_KEY = "MODE";
+    private static final String MODE_SLOT = "Mode";
 
     @Override
     public void onSessionStarted(final SessionStartedRequest request, final Session session)
@@ -95,8 +95,7 @@ public class SessionSpeechlet implements Speechlet {
         // Get the color slot from the list of slots.
         Slot modeSlot = slots.get(MODE_SLOT);
         String speechText, repromptText;
-        println intent.dump()
-        println session.dump()
+        println slots.dump()
 
         // Check for favorite color and create output to user.
         if ( modeSlot != null) {
