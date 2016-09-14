@@ -8,6 +8,24 @@
           "type": "LIST_OF_MODES"
         }
       ]
+    },
+	 {
+      "intent": "EOTOpernationalDataIntent",
+      "slots": [
+        {
+          "name": "Type",
+          "type": "LIST_OF_TYPES"
+        },
+        {
+          "name": "Direction",
+          "type": "LIST_OF_DIRECTION"
+        }, 
+		{
+		  "name": "Description",
+          "type": "LIST_OF_DESC"
+		}
+		
+      ]
     }
   ]
 }

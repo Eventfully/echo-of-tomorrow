@@ -16,14 +16,20 @@ import org.apache.commons.lang3.StringUtils
 @Slf4j
 public class SessionSpeechlet implements Speechlet {
 
-    private static final String MODE_KEY = "MODE";
-    private static final String MODE_SLOT = "Mode";
+    private static final String MODE_KEY = "MODE"
+    private static final String MODE_SLOT = "Mode"
+	private static final String TYPE_KEY = "TYPE"
+    private static final String TYPE_SLOT = "Type"
+	private static final String DIR_KEY = "DIRECTION"
+    private static final String DIR_SLOT = "Direction"
+	private static final String DESC_KEY = "DESCRIPTION"
+    private static final String DESC_SLOT = "Description"
 
     @Override
     public void onSessionStarted(final SessionStartedRequest request, final Session session)
             throws SpeechletException {
         log.info("onSessionStarted requestId={}, sessionId={}", request.getRequestId(),
-                session.getSessionId());
+                session.getSessionId())
         // any initialization logic goes here
     }
 
@@ -31,25 +37,28 @@ public class SessionSpeechlet implements Speechlet {
     public SpeechletResponse onLaunch(final LaunchRequest request, final Session session)
             throws SpeechletException {
         log.info("onLaunch requestId={}, sessionId={}", request.getRequestId(),
-                session.getSessionId());
-        return getWelcomeResponse();
+                session.getSessionId())
+        return getWelcomeResponse()
     }
 
     @Override
     public SpeechletResponse onIntent(final IntentRequest request, final Session session)
             throws SpeechletException {
         log.info("onIntent requestId={}, sessionId={}", request.getRequestId(),
-                session.getSessionId());
+                session.getSessionId())
 
         // Get intent from the request object.
         Intent intent = request.getIntent();
         String intentName = (intent != null) ? intent.getName() : null;
-        log.info("intentName: $intentName")
+       
+     	   log.info("intentName: $intentName")
 
         // Note: If the session is started with an intent, no welcome message will be rendered;
         // rather, the intent specific response will be returned.
         if ('EOTModeIntent'.equals(intentName)) {
             return setModeInSession(intent, session);
+		} else if ('EOTOpernationalDataIntent'.equals(intentName)) {
+			return getOperationalData(intent, session);
         } else {
             throw new SpeechletException("Invalid Intent");
         }
@@ -58,8 +67,7 @@ public class SessionSpeechlet implements Speechlet {
     @Override
     public void onSessionEnded(final SessionEndedRequest request, final Session session)
             throws SpeechletException {
-        log.info("onSessionEnded requestId={}, sessionId={}", request.getRequestId(),
-                session.getSessionId());
+        log.info("onSessionEnded requestId={}, sessionId={}", request.getRequestId(), session.getSessionId());
         // any cleanup logic goes here
     }
 
@@ -74,10 +82,6 @@ public class SessionSpeechlet implements Speechlet {
         String repromptText = "Do you want to work with operations or development";
 
         return getSpeechletResponse(speechText, repromptText, true);
-    }
-
-    private SpeechletResponse workwithOperations(final Intent intent, final Session session) {
-
     }
 
     /**
@@ -119,6 +123,25 @@ public class SessionSpeechlet implements Speechlet {
 
         return getSpeechletResponse(speechText, repromptText, true);
     }
+	private SpeechletResponse getOperationalData(final Intent intent, final Session session) {
+	
+			Slot typeSlot = intent.getSlot(TYPE_SLOT);
+            Slot descSlot = intent.getSlot(DESC_SLOT);
+			Slot dirSlot = intent.getSlot(DIR_SLOT);
+			println "typeSlot: " + typeSlot.dump()
+			println "descSlot: " + descSlot.dump()
+			println "dirSlot: " + dirSlot.dump()
+			
+			//Handle what we have
+			String speechText, repromptText;
+			if (dirSlot != null || dirSlot.getValue() != null) {
+				speechText = "Today no " + typeSlot.getValue() + " was " + dirSlot.getValue() + " from " + descSlot.getValue()
+			} else {
+				speechText = "Today no " + typeSlot.getValue() + " was " + dirSlot.getValue() + " from " + descSlot.getValue()
+			}
+			
+			return getSpeechletResponse(speechText, repromptText, true);
+	}
 
     /**
      * Creates a {@code SpeechletResponse} for the intent and get the user's favorite color from the
