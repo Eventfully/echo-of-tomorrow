@@ -10,11 +10,28 @@
       ]
     },
 	{
-      "intent": "EOTPageSupport",
+      "intent": "EOTPageSupportIntent",
       "slots": [
         {
           "name": "Page",
           "type": "LIST_OF_SUPPORT"
+        }
+      ]
+    },
+	{
+      "intent": "EOTDevelopmentIntent",
+      "slots": [
+        {
+          "name": "Dev",
+          "type": "LIST_OF_DEVELOPMENT"
+        },
+		 {
+          "name": "Config",
+          "type": "LIST_OF_CONFIGS"
+        },
+		{
+          "name": "Answer",
+          "type": "AMAZON.LITERAL"
         }
       ]
     },

@@ -24,6 +24,10 @@ public class SessionSpeechlet implements Speechlet {
     private static final String DIR_SLOT = "Direction"
 	private static final String DESC_KEY = "DESCRIPTION"
     private static final String DESC_SLOT = "Description"
+	private static final String PAGE_SLOT = "Page" //No need for this
+	private static final String DEV_SLOT = "Dev"
+	private static final String DEV_KEY = "DEV"
+	private static final String CONFIG_KEY = "CONFIG"
 
     @Override
     public void onSessionStarted(final SessionStartedRequest request, final Session session)
@@ -50,17 +54,33 @@ public class SessionSpeechlet implements Speechlet {
 			// Get intent from the request object.
 			Intent intent = request.getIntent();
 			String intentName = (intent != null) ? intent.getName() : null;
-       
+			Slot answer = intent.getSlot("Answer")
+			String state = session.getAttribute(DEV_KEY)
+			
 			log.info("intentName: $intentName")
-
+			log.info("state: $state")
+			log.info("answer :  $answer")
         // Note: If the session is started with an intent, no welcome message will be rendered;
         // rather, the intent specific response will be returned.
-        if ('EOTModeIntent'.equals(intentName)) {
+        
+		if("stop".equalsIgnoreCase(query.value) ||
+                "cancel".equals(query.value)) {
+            return quit()
+        }
+		
+		if ('EOTModeIntent'.equals(intentName)) {
             return setModeInSession(intent, session)
 		} else if ('EOTOpernationalDataIntent'.equals(intentName)) {
 			return getOperationalData(intent, session)
-		} else if ('EOTPageSupport'.equals(intentName)) {
+		} else if ('EOTPageSupportIntent'.equals(intentName)) {
 			return pageSupport(intent, session)
+		} else if ('EOTDevelopmentIntent'.equals(intentName)) {
+			if (state) {
+				return setDeveloptmentTasks(intent, session)
+			} else {
+				return getDevelopmentOperations(intent, session)
+			}
+			
         } else {
             throw new SpeechletException("Invalid Intent")
         }
@@ -84,6 +104,14 @@ public class SessionSpeechlet implements Speechlet {
         String repromptText = "Do you want to work with operations or development";
 
         return getSpeechletResponse(speechText, repromptText, true)
+    }
+	
+	private SpeechletResponse quit() {
+        // Create the quit message.
+        String speechText = "Ending Integrations."
+        String repromptText = "Thank you";
+
+        return getSpeechletResponse(speechText, repromptText, false)
     }
 
     /**
@@ -152,6 +180,55 @@ public class SessionSpeechlet implements Speechlet {
 			
 			return getSpeechletResponse(speechText, repromptText, true)
 	}
+	
+	private SpeechletResponse getDevelopmentOperations(final Intent intent, final Session session) {
+	
+			// Get the slots from the intent.
+			String speechText, repromptText
+			Map<String, Slot> slots = intent.getSlots()
+
+			// Get the dev task from the slot
+			Slot devSlot = slots.get(DEV_SLOT)
+			println slots.dump()
+
+			// Check if the user wants to create or configure
+			if (devSlot) {	
+				String currentOperation =  devSlot.getValue()
+				session.setAttribute(DEV_KEY, currentOperation)
+				if (currentOperation == 'create'){
+					//ToDo, get next INT ID from backend (svn, github?)
+					speechText = "Creating new integration with id INT0036. "
+					repromptText = "Which component?"
+
+				} else if (currentOperation == 'configure' ){
+					speechText = "Which integration do you want to configure?"
+					
+				}
+
+
+			} else {
+				// Render an error since we don't know what the users favorite color is.
+				speechText = "I'm not sure what you want to work with, please try again"
+
+			}
+
+			return getSpeechletResponse(speechText, repromptText, true)
+	}
+	private SpeechletResponse setDeveloptmentTasks(final Intent intent, final Session session) {
+		String speechText, repromptText
+		String createTask = query.getValue()
+		
+		println "setDev $createTask"
+		session.setAttribute(DEV_KEY, "DEV")
+		session.setAttribute(CONFIG_KEY, createTask)
+		
+		speechText = "Added $createTask"
+		repromptText = "Which component?"
+		
+		return getSpeechletResponse(speechText, repromptText, true)
+	
+	}
+	
 	private SpeechletResponse pageSupport(final Intent intent, final Session session) {
 	
 			String speechText
@@ -162,9 +239,9 @@ public class SessionSpeechlet implements Speechlet {
 			String type = (String) session.getAttribute(TYPE_KEY)
 			String description = (String) session.getAttribute(DESC_KEY)
 
-			// Check to make sure user's favorite color is set in the session.
+			// We could do this check when we have the request, and send it to diffrent functions
 			if (direction && type && description) {
-				speechText = "Paging support, no ${type} for integration INT001 ${description} was ${direction} today."
+				speechText = "Paging support, no $type for integration INT001 $description was $direction today."
 			} else {
 				// Missing some of the values? Adjust the text
 				speechText = "I need more information to page support, what do you want me to send?"
@@ -179,8 +256,7 @@ public class SessionSpeechlet implements Speechlet {
     /**
      * Returns a Speechlet response for a speech and reprompt text.
      */
-    private SpeechletResponse getSpeechletResponse(String speechText, String repromptText,
-                                                   boolean isAskResponse) {
+    private SpeechletResponse getSpeechletResponse(String speechText, String repromptText, boolean isAskResponse) {
         // Create the Simple card content.
         SimpleCard card = new SimpleCard()
         card.setTitle("Session")

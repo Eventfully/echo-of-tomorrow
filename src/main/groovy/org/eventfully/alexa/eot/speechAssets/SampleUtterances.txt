@@ -5,6 +5,8 @@ EOTOpernationalDataIntent tell me how many {Type} are {Direction} today from {De
 EOTOpernationalDataIntent how many {Type} was {Direction} today
 EOTOpernationalDataIntent say how many {Type} was {Direction} today 
 
-EOTPageSupport {Page} support
-EOTPageSupport {Page} support about this
-EOTPageSupport {Page} this to support
+EOTPageSupportIntent {Page} support
+EOTPageSupportIntent {Page} support about this
+EOTPageSupportIntent {Page} this to support
+
+EOTDevelopmentIntent {Dev}
