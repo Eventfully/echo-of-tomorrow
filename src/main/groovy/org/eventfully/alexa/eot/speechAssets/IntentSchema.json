@@ -9,6 +9,15 @@
         }
       ]
     },
+	{
+      "intent": "EOTPageSupport",
+      "slots": [
+        {
+          "name": "Page",
+          "type": "LIST_OF_SUPPORT"
+        }
+      ]
+    },
 	 {
       "intent": "EOTOpernationalDataIntent",
       "slots": [

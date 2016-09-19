@@ -24,6 +24,8 @@ public class EOTSpeechletRequestStreamHandler extends SpeechletRequestStreamHand
          */
         supportedApplicationIds = new HashSet<String>();
         supportedApplicationIds.add("amzn1.ask.skill.1f323533-d614-4649-ab29-78fd62e118eb");
+		supportedApplicationIds.add("amzn1.ask.skill.a002c606-e7d8-446a-8db5-b2685be420f2");
+		
     }
 
     public EOTSpeechletRequestStreamHandler() {
