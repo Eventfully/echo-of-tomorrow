@@ -76,6 +76,7 @@ public class SessionSpeechlet implements Speechlet {
 			if (state) {
 				return setDeveloptmentTasks(intent, session)
 			} else {
+				
 				return getDevelopmentOperations(intent, session)
 			}
 		} else if ("AMAZON.StopIntent".equals(intentName)) {
@@ -198,6 +199,7 @@ public class SessionSpeechlet implements Speechlet {
 					//ToDo, get next INT ID from backend (svn, github?)
 					speechText = "Creating new integration with id INT0036. "
 					repromptText = "Which component?"
+					session.setAttribute(DEV_KEY, "DEV")
 
 				} else if (currentOperation == 'configure' ){
 					speechText = "Which integration do you want to configure?"
