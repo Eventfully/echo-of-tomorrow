@@ -28,6 +28,7 @@ public class SessionSpeechlet implements Speechlet {
 	private static final String DEV_SLOT = "Dev"
 	private static final String DEV_KEY = "DEV"
 	private static final String CONFIG_KEY = "CONFIG"
+	private static final String CONFIG_SLOT = "Config"
 
     @Override
     public void onSessionStarted(final SessionStartedRequest request, final Session session)
@@ -98,8 +99,8 @@ public class SessionSpeechlet implements Speechlet {
      */
     private SpeechletResponse getWelcomeResponse() {
         // Create the welcome message.
-        String speechText = "Starting Integrations."
-        String repromptText = "Do you want to work with operations or development";
+        String speechText = "Starting Integrations. Do you want to work with operations or development"
+        String repromptText = "You need to choose either operations or development";
 
         return getSpeechletResponse(speechText, repromptText, true)
     }
@@ -212,18 +213,31 @@ public class SessionSpeechlet implements Speechlet {
 
 			return getSpeechletResponse(speechText, repromptText, true)
 	}
+	
 	private SpeechletResponse setDeveloptmentTasks(final Intent intent, final Session session) {
 		String speechText, repromptText
-		String createTask = query.getValue()
+		Map<String, Slot> slots = intent.getSlots()
+		boolean isAskResponse = false
+		// Get the dev task from the slot
+		Slot tasksSlot = slots.get(CONFIG_SLOT)
+		println slots.dump()
+		
+		
+		String createTask = tasksSlot.getValue()
 		
 		println "setDev $createTask"
-		session.setAttribute(DEV_KEY, "DEV")
-		session.setAttribute(CONFIG_KEY, createTask)
+		if(createTask == 'none') {
+			speechText = "Integration INT001 configured with:"
+			isAskResponse = false
+		} else {
+			session.setAttribute(DEV_KEY, "DEV")
+			session.setAttribute(CONFIG_KEY, createTask)
+			isAskResponse = true
+			speechText = "Added $createTask"
+			repromptText = "Which component?"
+		}
 		
-		speechText = "Added $createTask"
-		repromptText = "Which component?"
-		
-		return getSpeechletResponse(speechText, repromptText, true)
+		return getSpeechletResponse(speechText, repromptText, isAskResponse)
 	
 	}
 	

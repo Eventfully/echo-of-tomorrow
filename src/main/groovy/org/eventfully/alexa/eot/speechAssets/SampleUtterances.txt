@@ -4,6 +4,7 @@ EOTModeIntent work with {Mode}
 EOTOpernationalDataIntent tell me how many {Type} are {Direction} today from {Description}
 EOTOpernationalDataIntent how many {Type} was {Direction} today
 EOTOpernationalDataIntent say how many {Type} was {Direction} today 
+EOTOpernationalDataIntent how many {Type} was {Direction} today from {Description}
 
 EOTPageSupportIntent {Page} support
 EOTPageSupportIntent {Page} support about this
