@@ -10,8 +10,8 @@ import groovy.util.logging.Slf4j
 import org.apache.commons.lang3.StringUtils
 
 /**
- * This sample shows how to create a simple speechlet for handling intent requests and managing
- * session interactions.
+ * This is the echo of tomorrow's integration 
+ * 
  */
 @Slf4j
 public class SessionSpeechlet implements Speechlet {
@@ -63,10 +63,7 @@ public class SessionSpeechlet implements Speechlet {
         // Note: If the session is started with an intent, no welcome message will be rendered;
         // rather, the intent specific response will be returned.
         
-		if("stop".equalsIgnoreCase(query.value) ||
-                "cancel".equals(query.value)) {
-            return quit()
-        }
+	
 		
 		if ('EOTModeIntent'.equals(intentName)) {
             return setModeInSession(intent, session)
@@ -80,7 +77,8 @@ public class SessionSpeechlet implements Speechlet {
 			} else {
 				return getDevelopmentOperations(intent, session)
 			}
-			
+		} else if ("AMAZON.StopIntent".equals(intentName)) {
+				return quit()
         } else {
             throw new SpeechletException("Invalid Intent")
         }
@@ -115,8 +113,7 @@ public class SessionSpeechlet implements Speechlet {
     }
 
     /**
-     * Creates a {@code SpeechletResponse} for the intent and stores the extracted color in the
-     * Session.
+     * Creates a {@code SpeechletResponse} for the intent
      *
      * @param intent
      *            intent for the request
@@ -158,6 +155,7 @@ public class SessionSpeechlet implements Speechlet {
 			Slot typeSlot = intent.getSlot(TYPE_SLOT)
             Slot descSlot = intent.getSlot(DESC_SLOT)
 			Slot dirSlot = intent.getSlot(DIR_SLOT)
+			
 			println "typeSlot: " + typeSlot.dump()
 			println "descSlot: " + descSlot.dump()
 			println "dirSlot: " + dirSlot.dump()
