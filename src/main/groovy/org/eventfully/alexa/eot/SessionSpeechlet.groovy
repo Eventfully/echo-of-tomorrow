@@ -34,6 +34,7 @@ public class SessionSpeechlet implements Speechlet {
     public void onSessionStarted(final SessionStartedRequest request, final Session session)
             throws SpeechletException {
 			
+			session.setAttribute("createConfig", [])
 			log.info("onSessionStarted requestId={}, sessionId={}", request.getRequestId(),session.getSessionId())
         // any initialization logic goes here
     }
@@ -75,8 +76,7 @@ public class SessionSpeechlet implements Speechlet {
 		} else if ('EOTDevelopmentIntent'.equals(intentName)) {
 			if (state) {
 				return setDeveloptmentTasks(intent, session)
-			} else {
-				
+			} else {	
 				return getDevelopmentOperations(intent, session)
 			}
 		} else if ("AMAZON.StopIntent".equals(intentName)) {
@@ -224,19 +224,22 @@ public class SessionSpeechlet implements Speechlet {
 		Slot tasksSlot = slots.get(CONFIG_SLOT)
 		println slots.dump()
 		
+	
+		def myConfig = session.getAttribute("createConfig")
 		
 		String createTask = tasksSlot.getValue()
 		
 		println "setDev $createTask"
 		if(createTask == 'none') {
-			speechText = "Integration INT001 configured with:"
+			speechText = "Integration INT001 configured with: " + myConfig.join(',') + ". Notification sent."
 			isAskResponse = false
 		} else {
 			session.setAttribute(DEV_KEY, "DEV")
-			session.setAttribute(CONFIG_KEY, createTask)
+			myConfig.add(createTask)
+			session.setAttribute("createConfig", myConfig)
 			isAskResponse = true
-			speechText = "Added $createTask"
-			repromptText = "Which component?"
+			speechText = "Added $createTask, Which component?"
+			repromptText = "Do you want to add anything else?"
 		}
 		
 		return getSpeechletResponse(speechText, repromptText, isAskResponse)

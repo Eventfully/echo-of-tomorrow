@@ -11,3 +11,4 @@ EOTPageSupportIntent {Page} support about this
 EOTPageSupportIntent {Page} this to support
 
 EOTDevelopmentIntent {Dev}
+EOTDevelopmentIntent {Config}
