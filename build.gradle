@@ -41,6 +41,7 @@ dependencies {
     compile 'org.apache.directory.studio:org.apache.commons.io:2.4'
     //compile 'org.eclipse.jetty:jetty-server:9.0.6.v20130930'
     //compile 'org.eclipse.jetty:jetty-servlet:9.0.6.v20130930'
+	compile group: 'com.github.groovy-wslite', name: 'groovy-wslite', version: '1.1.3'
 
 
 }

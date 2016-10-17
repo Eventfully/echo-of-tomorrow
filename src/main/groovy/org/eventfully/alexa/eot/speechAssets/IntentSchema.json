@@ -55,7 +55,18 @@
     }, 
 	{
       "intent": "AMAZON.StopIntent"
-    }
-	
+    },
+	{
+	  "intent": "AMAZON.PauseIntent"
+	},
+	{
+	  "intent": "AMAZON.PreviousIntent"
+	},
+	{
+      "intent": "AMAZON.HelpIntent"
+    },
+	{
+	  "intent": "AMAZON.ResumeIntent"
+	},
   ]
 }

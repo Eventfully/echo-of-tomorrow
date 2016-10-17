@@ -8,7 +8,7 @@ import com.amazon.speech.ui.Reprompt
 import com.amazon.speech.ui.SimpleCard
 import groovy.util.logging.Slf4j
 import org.apache.commons.lang3.StringUtils
-
+import wslite.rest.*
 /**
  * This is the echo of tomorrow's integration 
  * 
@@ -29,14 +29,17 @@ public class SessionSpeechlet implements Speechlet {
 	private static final String DEV_KEY = "DEV"
 	private static final String CONFIG_KEY = "CONFIG"
 	private static final String CONFIG_SLOT = "Config"
+	
+	private static final String EOTUrl = "http://echo-of-tomorrow.eu.cloudhub.io/api/"
 
     @Override
     public void onSessionStarted(final SessionStartedRequest request, final Session session)
-            throws SpeechletException {
+			throws SpeechletException {
 			
 			session.setAttribute("createConfig", [])
+			session.setAttribute("state", "start")
 			log.info("onSessionStarted requestId={}, sessionId={}", request.getRequestId(),session.getSessionId())
-        // any initialization logic goes here
+			  
     }
 
     @Override
@@ -55,18 +58,15 @@ public class SessionSpeechlet implements Speechlet {
 
 			// Get intent from the request object.
 			Intent intent = request.getIntent();
-			String intentName = (intent != null) ? intent.getName() : null;
+			String intentName = intent?.getName()
+			
 			Slot answer = intent.getSlot("Answer")
 			String state = session.getAttribute(DEV_KEY)
 			
 			log.info("intentName: $intentName")
 			log.info("state: $state")
 			log.info("answer :  $answer")
-        // Note: If the session is started with an intent, no welcome message will be rendered;
-        // rather, the intent specific response will be returned.
-        
-	
-		
+			
 		if ('EOTModeIntent'.equals(intentName)) {
             return setModeInSession(intent, session)
 		} else if ('EOTOpernationalDataIntent'.equals(intentName)) {
@@ -81,7 +81,9 @@ public class SessionSpeechlet implements Speechlet {
 			}
 		} else if ("AMAZON.StopIntent".equals(intentName)) {
 				return quit()
-        } else {
+        } else if ("AMAZON.HelpIntent".equals(intentName)) {
+				return help(session)
+		} else {
             throw new SpeechletException("Invalid Intent")
         }
     }
@@ -90,7 +92,7 @@ public class SessionSpeechlet implements Speechlet {
     public void onSessionEnded(final SessionEndedRequest request, final Session session)
             throws SpeechletException {
 			log.info("onSessionEnded requestId={}, sessionId={}", request.getRequestId(), session.getSessionId())
-        // any cleanup logic goes here
+			// any cleanup logic goes here
     }
 
     /**
@@ -105,14 +107,48 @@ public class SessionSpeechlet implements Speechlet {
 
         return getSpeechletResponse(speechText, repromptText, true)
     }
-	
+	 /**
+     * Creates and returns a {@code SpeechletResponse} with a quit message.
+     *
+     * @return SpeechletResponse spoken and visual quit message
+     */
 	private SpeechletResponse quit() {
         // Create the quit message.
-        String speechText = "Ending Integrations."
-        String repromptText = "Thank you";
-
+        String speechText = "Ending Integrations. Thank you"
+       
         return getSpeechletResponse(speechText, repromptText, false)
     }
+	 /**
+     * Creates and returns a {@code SpeechletResponse} with a help message.
+     *
+     * @return SpeechletResponse spoken and visual help message
+     */
+	private SpeechletResponse help(final Session session) {
+		String speechText = "You can say stop or cancel to end the session at any time.  I will guide you through the every step. First choose what you want to work with, either development or operations.If you need a question repeated, say repeat question."
+		
+		def state = session.getAttribute("state")
+			switch(state){
+				case "start": 
+					speechText = ""
+					break 
+				case "setMode"
+					speechText = ""
+					break 
+				case "getOperationalData"
+					speechText = ""
+					break
+				case "getDevelopmentOperations"
+					speechText = ""
+					break
+				case "setDeveloptmentTasks"
+					speechText = ""
+					break
+			
+			}
+		
+		
+		return getSpeechletResponse(speechText, repromptText, true)
+	}
 
     /**
      * Creates a {@code SpeechletResponse} for the intent
@@ -129,9 +165,9 @@ public class SessionSpeechlet implements Speechlet {
         Slot modeSlot = slots.get(MODE_SLOT)
         String speechText, repromptText
         println slots.dump()
-
+		session.setAttribute("state", "setMode")
         // Check for favorite color and create output to user.
-        if ( modeSlot != null) {
+        if (modeSlot) {
             // Store the user's favorite color in the Session and create response.
             String currentMode =  modeSlot.getValue()
             session.setAttribute(MODE_KEY, currentMode)
@@ -153,20 +189,67 @@ public class SessionSpeechlet implements Speechlet {
         return getSpeechletResponse(speechText, repromptText, true)
     }
 	private SpeechletResponse getOperationalData(final Intent intent, final Session session) {
-	
+			session.setAttribute("state", "getOperationalData")
+			
 			Slot typeSlot = intent.getSlot(TYPE_SLOT)
             Slot descSlot = intent.getSlot(DESC_SLOT)
 			Slot dirSlot = intent.getSlot(DIR_SLOT)
 			
-			println "typeSlot: " + typeSlot.dump()
-			println "descSlot: " + descSlot.dump()
-			println "dirSlot: " + dirSlot.dump()
+			println "INFO: typeSlot: " + typeSlot.dump() + " descSlot: " + descSlot.dump() + " dirSlot: " + dirSlot.dump()
 			
 			//Handle what we have
+			//If we have all of them for the backendRequest
+			String backEndPath, type, desc, dir = ""
+			
+			type = typeSlot?.getValue()
+			desc = descSlot?.getValue()
+			dir = dirSlot?.getValue()
+			def queryParams = [:]
+			
+			println "INFO: type: $type desc: $desc dir: $dir" 
+			backEndPath = type ?: 'all' + dir  
+			
+			if (dir) {
+				queryParams['direction'] = dir
+			} 
+			if (desc) {
+				queryParams['partner'] = desc
+			}
+			queryParams['interval'] = 'today'
+			
+			def response = backendRequest(null, null, backEndPath, queryParams)
+			
 			//ToDo, dynamic handling of what we have.. 
-			String speechText, repromptText;
-			if (dirSlot != null || dirSlot.getValue() != null) {
-				speechText = "Today no " + typeSlot.getValue() + " was " + dirSlot.getValue() + " from " + descSlot.getValue()
+			String speechText, repromptText
+			if (response) {
+				def direction, messageType,messageCount, partner =""
+				messageType = response.message.name
+				partner = response.partner.name
+				
+				if (response.direction == 'inbound') {
+					direction = "received"
+				} else {
+					direction = "sent"
+				}
+				if (response.total == '0') {
+					messageCount = "no"
+				} else {
+					messageCount= response.total 
+				}
+				
+				//handle how the response should be
+				if (direction && messageType && messageCount && partner) {
+					speechText = "Today, $messageCount $messageType was $direction from $partner"
+				} else if (direction && messageType && messageCount) {
+					speechText = "Today, $messageCount $messageType was $direction"
+				} else if (direction && messageCount && partner) {
+					speechText = "Today, $messageCount message was $direction from $partner"
+				} else if (messageCount && partner) {
+					speechText = "Today, there was a total of $messageCount from $partner"
+				} else if (messageType && messageCount) {
+					speechText = "Today, there was a total of $messageCount of $messageType"
+				}
+				
 				//Set the session values for later
 				session.setAttribute(TYPE_KEY, typeSlot.getValue())
 				session.setAttribute(DESC_KEY, descSlot.getValue())
@@ -182,7 +265,7 @@ public class SessionSpeechlet implements Speechlet {
 	}
 	
 	private SpeechletResponse getDevelopmentOperations(final Intent intent, final Session session) {
-	
+			session.setAttribute("state", "getDevelopmentOperations")
 			// Get the slots from the intent.
 			String speechText, repromptText
 			Map<String, Slot> slots = intent.getSlots()
@@ -217,6 +300,8 @@ public class SessionSpeechlet implements Speechlet {
 	}
 	
 	private SpeechletResponse setDeveloptmentTasks(final Intent intent, final Session session) {
+		session.setAttribute("state", "setDeveloptmentTasks")
+		
 		String speechText, repromptText
 		Map<String, Slot> slots = intent.getSlots()
 		boolean isAskResponse = false
@@ -296,4 +381,12 @@ public class SessionSpeechlet implements Speechlet {
             return SpeechletResponse.newTellResponse(speech, card)
         }
     }
+	private def backendRequest(def userName, def password, def path, Map<String, String> parameters) {
+		def requestUrl = new RESTClient(EOTUrl)
+		//requestUrl.auth.basic userName, password
+		def response = requestUrl.get(path: path,  query: parameters)
+		
+		
+		return response.json
+	}
 }
