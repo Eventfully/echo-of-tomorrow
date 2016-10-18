@@ -28,6 +28,7 @@ public class SessionSpeechlet implements Speechlet {
 	private static final String DEV_SLOT = "Dev"
 	private static final String DEV_KEY = "DEV"
 	private static final String CONFIG_KEY = "CONFIG"
+	private static final String COUNT_KEY = "COUNT"
 	private static final String CONFIG_SLOT = "Config"
 	
 	private static final String EOTUrl = "http://echo-of-tomorrow.eu.cloudhub.io/api/"
@@ -124,24 +125,24 @@ public class SessionSpeechlet implements Speechlet {
      * @return SpeechletResponse spoken and visual help message
      */
 	private SpeechletResponse help(final Session session) {
-		String speechText = "You can say stop or cancel to end the session at any time.  I will guide you through the every step. First choose what you want to work with, either development or operations.If you need a question repeated, say repeat question."
+		String speechText = "You can say stop or cancel to end the session at any time.  I will guide you through the every step. "
 		
 		def state = session.getAttribute("state")
 			switch(state){
 				case "start": 
-					speechText = ""
+					speechText += "First choose what you want to work with, either development or operations.If you need a question repeated, say repeat question."
 					break 
-				case "setMode"
-					speechText = ""
+				case "setMode":
+					speechText += "First choose what you want to work with, either development or operations.If you need a question repeated, say repeat question."
 					break 
-				case "getOperationalData"
-					speechText = ""
+				case "getOperationalData":
+					speechText += "Tell me what integration you want to get operational data from"
 					break
-				case "getDevelopmentOperations"
-					speechText = ""
+				case "getDevelopmentOperations":
+					speechText += "Tell me if you want to create or configure an integration"
 					break
-				case "setDeveloptmentTasks"
-					speechText = ""
+				case "setDeveloptmentTasks":
+					speechText += "Tell me want components you want to add to your integration"
 					break
 			
 			}
@@ -207,7 +208,7 @@ public class SessionSpeechlet implements Speechlet {
 			def queryParams = [:]
 			
 			println "INFO: type: $type desc: $desc dir: $dir" 
-			backEndPath = type ?: 'all' + dir  
+			backEndPath = "/operations/" + type ?: 'all' 
 			
 			if (dir) {
 				queryParams['direction'] = dir
@@ -218,11 +219,13 @@ public class SessionSpeechlet implements Speechlet {
 			queryParams['interval'] = 'today'
 			
 			def response = backendRequest(null, null, backEndPath, queryParams)
-			
+			println "INFO: response from backend: $response"
 			//ToDo, dynamic handling of what we have.. 
-			String speechText, repromptText
+			String speechText, repromptText  = ""
+			def direction, messageType,messageCount, partner =""
+			//INFO: response from backend: [total:0, partner:[name:Acme], message:[name:invoices], errors:1, direction:sent]
 			if (response) {
-				def direction, messageType,messageCount, partner =""
+			println "INFO: We have a response"
 				messageType = response.message.name
 				partner = response.partner.name
 				
@@ -236,31 +239,47 @@ public class SessionSpeechlet implements Speechlet {
 				} else {
 					messageCount= response.total 
 				}
-				
+				println "INFO: We have direction: $direction, messageType: $messageType ,messageCount: $messageCount, partner: $partner"
 				//handle how the response should be
-				if (direction && messageType && messageCount && partner) {
+				if (direction && messageType && partner) {
 					speechText = "Today, $messageCount $messageType was $direction from $partner"
-				} else if (direction && messageType && messageCount) {
+				} else if (direction && messageType) {
 					speechText = "Today, $messageCount $messageType was $direction"
-				} else if (direction && messageCount && partner) {
+				} else if (direction && partner) {
 					speechText = "Today, $messageCount message was $direction from $partner"
-				} else if (messageCount && partner) {
+				} else if (partner) {
 					speechText = "Today, there was a total of $messageCount from $partner"
-				} else if (messageType && messageCount) {
+				} else if (messageType) {
 					speechText = "Today, there was a total of $messageCount of $messageType"
 				}
 				
-				//Set the session values for later
-				session.setAttribute(TYPE_KEY, typeSlot.getValue())
-				session.setAttribute(DESC_KEY, descSlot.getValue())
-				session.setAttribute(DIR_KEY, dirSlot.getValue())
-				
-				//ToDo, save the number of INVOICES etc from the backend to the session
-				
+			//ToDo we should handle this more generic.. 
 			} else {
-				speechText = "Today no " + typeSlot.getValue() + " was " + dirSlot.getValue() + " from " + descSlot.getValue()
+				if (direction && partner && messageType) {
+					speechText = "Sorry, I could not find any information about $messageType that was $direction with the key of $partner"
+				} else if (direction && partner) {
+					speechText = "Sorry, I could not find any information about transactions that was $direction with the key of $partner"
+				} else if (direction && messageType) {
+					speechText = "Sorry, I could not find any information about $messageType that was $direction"
+				} else if (partner && messageType) {
+					speechText = "Sorry, I could not find any information about $messageType with the key of $partner"
+				} else if (partner) {
+					speechText = "Sorry, I could not find any information about transactions with the key of $partner"
+				} else if (messageType) {
+					speechText = "Sorry, I could not find any information about $messageType"
+				} else if(direction){
+					speechText = "Sorry, I could not find any information about transactions $direction"
+				}
+				
+				
 			}
+			//Set the session values for later
+			session.setAttribute(TYPE_KEY, messageType)
+			session.setAttribute(DESC_KEY, partner)
+			session.setAttribute(DIR_KEY, direction)
+			session.setAttribute(COUNT_KEY, messageCount)
 			
+			println "INFO: Sending text: $speechText" 
 			return getSpeechletResponse(speechText, repromptText, true)
 	}
 	
@@ -337,13 +356,14 @@ public class SessionSpeechlet implements Speechlet {
 			boolean isAskResponse = false
 
 			// Get the information from the session
-			String direction = (String) session.getAttribute(DIR_KEY)
-			String type = (String) session.getAttribute(TYPE_KEY)
-			String description = (String) session.getAttribute(DESC_KEY)
-
+			String direction = session.getAttribute(DIR_KEY)
+			String type = session.getAttribute(TYPE_KEY)
+			String description = session.getAttribute(DESC_KEY)
+			String messageCount = session.getAttribute(COUNT_KEY)
 			// We could do this check when we have the request, and send it to diffrent functions
+			
 			if (direction && type && description) {
-				speechText = "Paging support, no $type for integration INT001 $description was $direction today."
+				speechText = "Paging support, $messageCount $type for integration $description was $direction today."
 			} else {
 				// Missing some of the values? Adjust the text
 				speechText = "I need more information to page support, what do you want me to send?"
