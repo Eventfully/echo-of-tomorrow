@@ -9,6 +9,8 @@ EOTOpernationalDataIntent how many {Type} was {Direction} today from {Descriptio
 EOTPageSupportIntent {Page} support
 EOTPageSupportIntent {Page} support about this
 EOTPageSupportIntent {Page} this to support
+EOTPageSupportIntent {Page} that to support
+EOTPageSupportIntent {Page} support about that
 
 EOTDevelopmentIntent {Dev}
 EOTDevelopmentIntent {Config}

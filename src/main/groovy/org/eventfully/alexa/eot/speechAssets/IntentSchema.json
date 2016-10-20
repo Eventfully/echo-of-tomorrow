@@ -19,6 +19,9 @@
       ]
     },
 	{
+		"intent": "EOTStopIntent"
+	},
+	{
       "intent": "EOTDevelopmentIntent",
       "slots": [
         {
@@ -28,10 +31,6 @@
 		 {
           "name": "Config",
           "type": "LIST_OF_CONFIGS"
-        },
-		{
-          "name": "Answer",
-          "type": "AMAZON.LITERAL"
         }
       ]
     },

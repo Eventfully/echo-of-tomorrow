@@ -6,6 +6,12 @@ import com.amazon.speech.speechlet.*
 import com.amazon.speech.ui.PlainTextOutputSpeech
 import com.amazon.speech.ui.Reprompt
 import com.amazon.speech.ui.SimpleCard
+import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.Table
+import com.amazonaws.services.dynamodbv2.document.Item
+import com.amazonaws.services.dynamodbv2.model.ScanRequest
+import com.amazonaws.services.dynamodbv2.model.ScanResult
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import groovy.util.logging.Slf4j
 import org.apache.commons.lang3.StringUtils
 import wslite.rest.*
@@ -54,9 +60,6 @@ public class SessionSpeechlet implements Speechlet {
     @Override
     public SpeechletResponse onIntent(final IntentRequest request, final Session session)
             throws SpeechletException {
-        
-			log.info("onIntent requestId={}, sessionId={}", request.getRequestId(),session.getSessionId())
-
 			// Get intent from the request object.
 			Intent intent = request.getIntent();
 			String intentName = intent?.getName()
@@ -64,9 +67,8 @@ public class SessionSpeechlet implements Speechlet {
 			Slot answer = intent.getSlot("Answer")
 			String state = session.getAttribute(DEV_KEY)
 			
-			log.info("intentName: $intentName")
-			log.info("state: $state")
-			log.info("answer :  $answer")
+			println "INFO: intentName: $intentName, state: $state, answer: $answer"
+		
 			
 		if ('EOTModeIntent'.equals(intentName)) {
             return setModeInSession(intent, session)
@@ -80,10 +82,16 @@ public class SessionSpeechlet implements Speechlet {
 			} else {	
 				return getDevelopmentOperations(intent, session)
 			}
+			
 		} else if ("AMAZON.StopIntent".equals(intentName)) {
 				return quit()
         } else if ("AMAZON.HelpIntent".equals(intentName)) {
+				println "INFO: Helpintent" 
 				return help(session)
+		} else if ("AMAZON.PauseIntent".equals(intentName)) {
+			println "INFO: Amazon pause intent" 
+		} else if ("AMAZON.ResumeIntent".equals(intentName)) {
+			println "INFO: Amazon resume intent" 
 		} else {
             throw new SpeechletException("Invalid Intent")
         }
@@ -117,7 +125,7 @@ public class SessionSpeechlet implements Speechlet {
         // Create the quit message.
         String speechText = "Ending Integrations. Thank you"
        
-        return getSpeechletResponse(speechText, repromptText, false)
+        return getSpeechletResponse(speechText, '', false)
     }
 	 /**
      * Creates and returns a {@code SpeechletResponse} with a help message.
@@ -147,8 +155,8 @@ public class SessionSpeechlet implements Speechlet {
 			
 			}
 		
-		
-		return getSpeechletResponse(speechText, repromptText, true)
+		println "INFO: Help response: $speechText"
+		return getSpeechletResponse(speechText, '', true)
 	}
 
     /**
@@ -234,7 +242,7 @@ public class SessionSpeechlet implements Speechlet {
 				} else {
 					direction = "sent"
 				}
-				if (response.total == '0') {
+				if (response.total == 0) {
 					messageCount = "no"
 				} else {
 					messageCount= response.total 
