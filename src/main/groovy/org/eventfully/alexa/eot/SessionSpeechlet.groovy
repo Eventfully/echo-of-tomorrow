@@ -7,6 +7,7 @@ import com.amazon.speech.ui.PlainTextOutputSpeech
 import com.amazon.speech.ui.Reprompt
 import com.amazon.speech.ui.SimpleCard
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.document.PutItemOutcome
 import com.amazonaws.services.dynamodbv2.document.Table
 import com.amazonaws.services.dynamodbv2.document.Item
 import com.amazonaws.services.dynamodbv2.model.ScanRequest
@@ -36,23 +37,24 @@ public class SessionSpeechlet implements Speechlet {
 	private static final String CONFIG_KEY = "CONFIG"
 	private static final String COUNT_KEY = "COUNT"
 	private static final String CONFIG_SLOT = "Config"
-	
+	private static final String SESSION_KEY = "Session"
+
 	private static final String EOTUrl = "http://echo-of-tomorrow.eu.cloudhub.io/api/"
 
     @Override
     public void onSessionStarted(final SessionStartedRequest request, final Session session)
 			throws SpeechletException {
-			
+			//We use sessions to keep some of the states. 
 			session.setAttribute("createConfig", [])
 			session.setAttribute("state", "start")
-			log.info("onSessionStarted requestId={}, sessionId={}", request.getRequestId(),session.getSessionId())
+            session.setAttribute("sessionData", [:])
+
 			  
     }
 
     @Override
     public SpeechletResponse onLaunch(final LaunchRequest request, final Session session)
             throws SpeechletException {
-			log.info("onLaunch requestId={}, sessionId={}", request.getRequestId(),session.getSessionId())
         
 		return getWelcomeResponse()
     }
@@ -65,11 +67,10 @@ public class SessionSpeechlet implements Speechlet {
 			String intentName = intent?.getName()
 			
 			Slot answer = intent.getSlot("Answer")
-			String state = session.getAttribute(DEV_KEY)
+			String state = session.getAttribute("state")
 			
 			println "INFO: intentName: $intentName, state: $state, answer: $answer"
-		
-			
+			println "INFO: Session id: " + session.getSessionId()
 		if ('EOTModeIntent'.equals(intentName)) {
             return setModeInSession(intent, session)
 		} else if ('EOTOpernationalDataIntent'.equals(intentName)) {
@@ -82,16 +83,17 @@ public class SessionSpeechlet implements Speechlet {
 			} else {	
 				return getDevelopmentOperations(intent, session)
 			}
-			
 		} else if ("AMAZON.StopIntent".equals(intentName)) {
 				return quit()
         } else if ("AMAZON.HelpIntent".equals(intentName)) {
 				println "INFO: Helpintent" 
 				return help(session)
 		} else if ("AMAZON.PauseIntent".equals(intentName)) {
-			println "INFO: Amazon pause intent" 
+			println "INFO: Amazon pause intent - save state to database"
+			setSessionData(session)
 		} else if ("AMAZON.ResumeIntent".equals(intentName)) {
-			println "INFO: Amazon resume intent" 
+			println "INFO: Amazon resume intent - get state data from database"
+            getSessionData(session)
 		} else {
             throw new SpeechletException("Invalid Intent")
         }
@@ -114,6 +116,7 @@ public class SessionSpeechlet implements Speechlet {
         String speechText = "Starting Integrations. Do you want to work with operations or development"
         String repromptText = "You need to choose either operations or development";
 
+
         return getSpeechletResponse(speechText, repromptText, true)
     }
 	 /**
@@ -134,23 +137,29 @@ public class SessionSpeechlet implements Speechlet {
      */
 	private SpeechletResponse help(final Session session) {
 		String speechText = "You can say stop or cancel to end the session at any time.  I will guide you through the every step. "
-		
-		def state = session.getAttribute("state")
+
+        def state = session.getAttribute("state")
 			switch(state){
 				case "start": 
-					speechText += "First choose what you want to work with, either development or operations.If you need a question repeated, say repeat question."
+					speechText += "First choose what you want to work with, either development or operations."
 					break 
-				case "setMode":
-					speechText += "First choose what you want to work with, either development or operations.If you need a question repeated, say repeat question."
+				case "setModeOp":
+					speechText += "Tell me what kind of data you want to know about, for example how many invoices was sent today."
+					break 
+				case "setModeDev":
+					speechText += "Tell me if you want to create a new integration or configure a existing one."
 					break 
 				case "getOperationalData":
-					speechText += "Tell me what integration you want to get operational data from"
+					speechText += "I have now told you the operational data, what do you want to do next? Send a message to support about what I just told you?"
 					break
-				case "getDevelopmentOperations":
-					speechText += "Tell me if you want to create or configure an integration"
+				case "getDevelopmentOperationsCreate":
+					speechText += "Tell me what components that should be added, for example: HTTPInput, XMLTOJSON"
+					break
+				case "getDevelopmentOperationsConfig":
+					speechText += "Tell me the integration id of the integration you want to configure."
 					break
 				case "setDeveloptmentTasks":
-					speechText += "Tell me want components you want to add to your integration"
+					speechText += "Tell me want components you want to add to your integration."
 					break
 			
 			}
@@ -173,17 +182,21 @@ public class SessionSpeechlet implements Speechlet {
         // Get the color slot from the list of slots.
         Slot modeSlot = slots.get(MODE_SLOT)
         String speechText, repromptText
-        println slots.dump()
-		session.setAttribute("state", "setMode")
+
+
+
+		
         // Check for favorite color and create output to user.
         if (modeSlot) {
             // Store the user's favorite color in the Session and create response.
             String currentMode =  modeSlot.getValue()
             session.setAttribute(MODE_KEY, currentMode)
             if (currentMode == 'operations'){
-                speechText = "Ask me about operational statistics."
+                session.setAttribute("state", "setModeOp")
+				speechText = "Ask me about operational statistics."
 
             } else if (currentMode == 'development' ){
+				session.setAttribute("state", "setModeDev")
                 speechText = "What do you want to do:"
                 repromptText = "Create or configure?"
             }
@@ -199,8 +212,9 @@ public class SessionSpeechlet implements Speechlet {
     }
 	private SpeechletResponse getOperationalData(final Intent intent, final Session session) {
 			session.setAttribute("state", "getOperationalData")
-			
-			Slot typeSlot = intent.getSlot(TYPE_SLOT)
+            
+
+            Slot typeSlot = intent.getSlot(TYPE_SLOT)
             Slot descSlot = intent.getSlot(DESC_SLOT)
 			Slot dirSlot = intent.getSlot(DIR_SLOT)
 			
@@ -292,7 +306,7 @@ public class SessionSpeechlet implements Speechlet {
 	}
 	
 	private SpeechletResponse getDevelopmentOperations(final Intent intent, final Session session) {
-			session.setAttribute("state", "getDevelopmentOperations")
+			
 			// Get the slots from the intent.
 			String speechText, repromptText
 			Map<String, Slot> slots = intent.getSlots()
@@ -306,12 +320,14 @@ public class SessionSpeechlet implements Speechlet {
 				String currentOperation =  devSlot.getValue()
 				session.setAttribute(DEV_KEY, currentOperation)
 				if (currentOperation == 'create'){
+					session.setAttribute("state", "getDevelopmentOperationsCreate")
 					//ToDo, get next INT ID from backend (svn, github?)
 					speechText = "Creating new integration with id INT0036. "
 					repromptText = "Which component?"
 					session.setAttribute(DEV_KEY, "DEV")
 
 				} else if (currentOperation == 'configure' ){
+					session.setAttribute("state", "getDevelopmentOperationsConfig")
 					speechText = "Which integration do you want to configure?"
 					
 				}
@@ -416,5 +432,37 @@ public class SessionSpeechlet implements Speechlet {
 		
 		
 		return response.json
+	}
+	 
+
+	private def getSessionData(Session session){
+        DynamoDB dynamoDB = new DynamoDB(new AmazonDynamoDBClient())
+        Table table = dynamoDB.getTable("EOT")
+
+        Item item = table.getItem("id", "1")
+        println "INFO: The Item from dynamodb" + item
+        println "INFO: The state of it: " + item.state
+
+        return getSpeechletResponse("Ok, I will resume", "", false)
+	}
+	private def setSessionData(Session session, def data){
+        //Get the session data
+        def state = session.getAttribute("state")
+        def stateData = session.getAttribute("sessionData")
+
+        DynamoDB dynamoDB = new DynamoDB(new AmazonDynamoDBClient())
+		Table table = dynamoDB.getTable("EOT")
+
+        table.deleteItem("id", "1");
+		Item item = new Item()
+				.withPrimaryKey("id", "1")
+				.withString("state", state)
+
+		stateData.each{ key, value->
+                item.withString(key,value)
+        }
+
+		PutItemOutcome outcome = table.putItem(item)
+        return getSpeechletResponse("Ok, I will pause", "", false)
 	}
 }

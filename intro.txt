@@ -1,0 +1,56 @@
+Y: Alexa, start Integrations.
+A: starting Integrations:
+I(Integrations): Do you want to work with operations or developemnt
+Y: Operations
+I: Ask me about operational statistics
+Y: Tell me how many orders are sent today from Tetra Pak?
+I: Today, no orders from Tetra Pak.
+Y: Page support about this
+I: Paging support, no orders for integration INT001 Tetra Pak received today.
+ 
+Y: Alexa, start Integrations
+A: starting Integrations.
+I: Integrations. You can work with operations or developement. Which will it be?
+Y: Development
+I: What do you want to do: create or configure?
+Y: Create 
+I: Creating new integration with id INT0036. 
+  Which component?
+U: HTTP Input
+I: Added HTTP Input. Which component?
+U: XML2JSON
+I: Added XML2JSON. Which Component?
+U: HTTP Output.
+I: Added HTTP Output. Which Component?
+U: None.
+I: Integration INT0036 configured with: HTTP Input, XML2JSON and HTTP Output. Notification sent.
+
+U: Alexa, stop.
+
+
+# Integrations dagarna 2016 
+- Echo of tomorrow
+Hej, vi är * och *, och började samma dag för mer än 6 år sedan på Enfo. 
+Under dessa år har vi jobbat en hel del tillsammans, även om vi nu tillhör Integration och Interactive. 
+Enfo Integration, som har en av världens bästa visioner, We create tomorrows integration's today, fick oss 
+att vilja visa vad vi tror är morgondagens integration. 
+
+- Citizen Integrator 
+Gartner, New, Vad är det? Vad betyder det? 
+Integration tools have historically been the domain of the specialists. The black belts. The plumbers. They have also required distinct skill sets and domain knowledge – from enterprise application integration (EAI) and enterprise service buses (ESBs) and services oriented architecture (SOA) to extract, transformation and load (ETL) and enterprise data warehousing (EDW) and business intelligence (BI). Different teams. Different tools. Different worlds.
+
+With apologies to S.E. Hinton, that was then, this is now…
+
+A few years ago, Gartner predicted that Citizen Developers will build at least 25% of new business applications by 2014. They’ve also predicted that in a few years, the CMO will spend more on IT than the CIO and the majority of new integration flows will be developed outside the control of IT departments. Of course, it’s not a new phenomenon that people want access to trusted information – including when, where and how they want it – but the The Nexus of Forces (also known has SMAC – social, mobile, analytics, cloud) has shaken up traditional roles and responsibilities when it comes to the business and IT relationship. In the impatient enterprise, waiting days, weeks or months to get access to this information is not an option.
+
+- Key Ingridients
+Finns en del andra pass här under integrationsdagarna (tex?)
+Vi tror på följande komponeter, som kan möjligöra citizens integrator
+ # Policies 
+ # How to's
+ # Culture
+ # Baseline 
+ # CI Tooling
+ # MBC (Micro build component(s)) 
+
+När vi har dessa delar, så möjliggör vi en tra
