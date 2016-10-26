@@ -331,7 +331,7 @@ public class SessionSpeechlet implements Speechlet {
 				if (currentOperation == 'create'){
 					session.setAttribute("state", "getDevelopmentOperationsCreate")
 					//ToDo, get next INT ID from backend (svn, github?)
-					speechText = "Creating new integration with id INT0036. "
+					speechText = "Creating a new integration for you. Configure it by adding components"
 					repromptText = "Which component?"
 					session.setAttribute(DEV_KEY, "DEV")
 
