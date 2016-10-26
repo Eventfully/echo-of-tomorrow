@@ -65,7 +65,7 @@ public class SessionSpeechlet implements Speechlet {
 			Intent intent = request.getIntent()
 			String intentName = intent?.getName()
 			String state = session.getAttribute("state")
-			
+			String devState = session.getAttribute(DEV_KEY)
 			println "INFO: intentName: $intentName, state: $state"
 			println "INFO: Session id: " + session.getSessionId()
 
@@ -76,7 +76,7 @@ public class SessionSpeechlet implements Speechlet {
             } else if ('EOTPageSupportIntent'.equals(intentName)) {
                 return pageSupport(intent, session)
             } else if ('EOTDevelopmentIntent'.equals(intentName)) {
-                if (state) {
+                if (devState) {
                     return setDevelopmentTasks(intent, session)
                 } else {
                     return getDevelopmentOperations(intent, session)
@@ -368,12 +368,14 @@ public class SessionSpeechlet implements Speechlet {
 
         def myConfig = session.getAttribute("createConfig")
 
-        String createTask = tasksSlot.getValue()
+        String createTask = tasksSlot.getValue()?:''
         slotsSession.put(CONFIG_SLOT, createTask)
         println "setDev $createTask"
         if(createTask == 'none') {
             speechText = "Integration INT001 configured with: " + myConfig.join(',') + ". Notification sent."
             isAskResponse = false
+        } else if (!createTask) {
+            speechText = "Sorry, I did not get that, what did you want to add?"
         } else {
             session.setAttribute(DEV_KEY, "DEV")
             myConfig.add(createTask)
