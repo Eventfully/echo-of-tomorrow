@@ -62,7 +62,7 @@ public class SessionSpeechlet implements Speechlet {
     public SpeechletResponse onIntent(final IntentRequest request, final Session session)
             throws SpeechletException {
 			// Get intent from the request object.
-			Intent intent = request.getIntent()?.getName()
+			Intent intent = request.getIntent()
 			String intentName = intent?.getName()
 			String state = session.getAttribute("state")
 			
@@ -203,11 +203,11 @@ public class SessionSpeechlet implements Speechlet {
         session.setAttribute("state", "sendOperationalRequest")
         println "INFO: typeSlot: " + type + " descSlot: " + desc + " dirSlot: " + dir
 
-        def backEndPath = ''
+
         def queryParams = [:]
 
         println "INFO: type: $type desc: $desc dir: $dir"
-        backEndPath = "/operations/" + type ?: 'all'
+        def backEndPath = "/operations/" + type ?: 'all'
 
         if (dir) {
             queryParams['direction'] = dir
@@ -225,8 +225,8 @@ public class SessionSpeechlet implements Speechlet {
         //INFO: response from backend: [total:0, partner:[name:Acme], message:[name:invoices], errors:1, direction:sent]
         if (response) {
             println "INFO: We have a response"
-            messageType = response.message.name
-            partner = response.partner.name
+            messageType = response.message.name?:''
+            partner = response.partner.name?:''
 
             if (response.direction == 'inbound') {
                 direction = "received"
@@ -278,7 +278,7 @@ public class SessionSpeechlet implements Speechlet {
         session.setAttribute(DIR_KEY, direction)
         session.setAttribute(COUNT_KEY, messageCount)
 
-        session.setAttribute("sessionData", sessionData)
+
         println "INFO: Sending text: $speechText"
         return getSpeechletResponse(speechText, repromptText, true)
     }
@@ -393,19 +393,30 @@ public class SessionSpeechlet implements Speechlet {
         boolean isAskResponse = false
 
         // Get the information from the session
-        String direction = session.getAttribute(DIR_KEY)
-        String type = session.getAttribute(TYPE_KEY)
-        String description = session.getAttribute(DESC_KEY)
-        String messageCount = session.getAttribute(COUNT_KEY)
+        String direction = session.getAttribute(DIR_KEY)?:''
+        String type = session.getAttribute(TYPE_KEY)?:''
+        String description = session.getAttribute(DESC_KEY)?:''
+        String messageCount = session.getAttribute(COUNT_KEY)?:''
         // We could do this check when we have the request, and send it to diffrent functions
 
         if (direction && type && description) {
             speechText = "Paging support, $messageCount $type for integration $description was $direction today."
+        } else if (direction && type) {
+            speechText = "Paging support, $messageCount $type was $direction today."
+        } else if (direction && description) {
+            speechText = "Paging support, $messageCount for integration $description was $direction today."
+        } else if (type && description) {
+            speechText = "Paging support, $messageCount $type for integration $description in total today."
+        } else if (type) {
+            speechText = "Paging support, $messageCount $type in total today."
+        } else if (direction) {
+            speechText = "Paging support, $messageCount transaction was $direction today."
+        } else if (description) {
+            speechText = "Paging support, $messageCount for integration $description in total today."
         } else {
             // Missing some of the values? Adjust the text
-            speechText = "I need more information to page support, what do you want me to send?"
-
-            isAskResponse = true
+            speechText = "I need more information to page support, sorry!"
+            isAskResponse = false
         }
 
         return getSpeechletResponse(speechText, "", isAskResponse)
