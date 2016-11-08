@@ -476,16 +476,13 @@ public class SessionSpeechlet implements Speechlet {
 		
 		String speechText, repromptText
 	
-		def myConfig = sessionData["createConfig"]
-        session.setAttribute("createConfig", myConfig)
+		def myConfig = session.getAttribute('createConfig')
+                //sessionData["createConfig"]
+        //session.setAttribute("createConfig", myConfig)
         session.setAttribute(DEV_KEY, "DEV")
 
+        speechText = "The integration is configured with: " + myConfig.join(',') + ". Anything else?"
 
-            if (myConfig.size() > 1 ) {
-                speechText = "The integration is configured with: " + myConfig.join(',') + ". Anything else?"
-            } else {
-                speechText = "The integration is configured with: " + myConfig + ". Anything else?"
-            }
 
 
 
