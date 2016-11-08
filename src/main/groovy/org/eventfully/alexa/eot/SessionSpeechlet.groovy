@@ -175,15 +175,14 @@ public class SessionSpeechlet implements Speechlet {
         // Get the slots from the intent.
         Map<String, Slot> slots = intent.getSlots()
 
-        // Get the color slot from the list of slots.
         Slot modeSlot = slots.get(MODE_SLOT)
         String speechText, repromptText
 
-        // Check for favorite color and create output to user.
+
         if (modeSlot) {
-            // Store the user's favorite color in the Session and create response.
             String currentMode =  modeSlot.getValue()
             session.setAttribute(MODE_KEY, currentMode)
+            println "INFO: Current mode is: " + currentMode
             if (currentMode == 'operations'){
                 session.setAttribute("state", "setModeOp")
 				speechText = "Ask me about operational statistics."
@@ -192,6 +191,9 @@ public class SessionSpeechlet implements Speechlet {
 				session.setAttribute("state", "setModeDev")
                 speechText = "What do you want to do:"
                 repromptText = "Create or configure?"
+            } else {
+
+                speechText = "I'm not sure what you want to work with, please try again"
             }
 
 
@@ -375,11 +377,12 @@ public class SessionSpeechlet implements Speechlet {
         String createTask = tasksSlot.getValue()?:''
         slotsSession.put(CONFIG_SLOT, createTask)
         println "setDev $createTask"
-        if(createTask == 'none') {
+        if(createTask == 'none' || createTask == 'done') {
             speechText = "Integration INT001 configured with: " + myConfig.join(',') + ". Notification sent."
             isAskResponse = false
         } else if (!createTask) {
             speechText = "Sorry, I did not get that, what did you want to add?"
+            isAskResponse = true
         } else {
             session.setAttribute(DEV_KEY, "DEV")
             myConfig.add(createTask)
