@@ -379,6 +379,7 @@ public class SessionSpeechlet implements Speechlet {
         println "setDev $createTask"
         if(createTask == 'none' || createTask == 'done') {
             speechText = "Integration INT001 configured with: " + myConfig.join(',') + ". Notification sent."
+            sendSupportMessage("User created: " + speechText - "Notification sent.")
             isAskResponse = false
         } else if (!createTask) {
             speechText = "Sorry, I did not get that, what did you want to add?"
@@ -439,10 +440,10 @@ public class SessionSpeechlet implements Speechlet {
         session.setAttribute("state", "getDevelopmentOperations")
         // Get the slots from the intent.
         String speechText, repromptText
-        def slots = sessionData["slots"]
+        //def slots = sessionData["slots"]
 
         // Get the dev task from the slot
-        def devSlot = slots[DEV_SLOT]
+        def devSlot = sessionData[DEV_SLOT]
 
 
         // Check if the user wants to create or configure
@@ -480,7 +481,16 @@ public class SessionSpeechlet implements Speechlet {
         session.setAttribute(DEV_KEY, "DEV")
 
 
-        speechText = "The integration is configured with: " + myConfig.join(',') + ". Anything else?"
+            if (myConfig.size() > 1 ) {
+                speechText = "The integration is configured with: " + myConfig.join(',') + ". Anything else?"
+            } else {
+                speechText = "The integration is configured with: " + myConfig + ". Anything else?"
+            }
+
+
+
+
+
 
 		return getSpeechletResponse(speechText, repromptText, true)
 	
