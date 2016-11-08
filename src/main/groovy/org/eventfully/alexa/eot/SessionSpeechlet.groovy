@@ -16,6 +16,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import groovy.util.logging.Slf4j
 import org.apache.commons.lang3.StringUtils
 import wslite.rest.*
+import net.gpedro.integrations.slack.*
 /**
  * This is the echo of tomorrow's integration 
  * 
@@ -147,7 +148,10 @@ public class SessionSpeechlet implements Speechlet {
 				case "setModeDev":
 					speechText += "Tell me if you want to create a new integration or configure a existing one."
 					break 
-				case "getOperationalData":
+				case "sendOperationalRequest":
+                    speechText += "I have now told you the operational data, what do you want to do next? Send a message to support about what I just told you?"
+                    break
+                case "getOperationalData":
 					speechText += "I have now told you the operational data, what do you want to do next? Send a message to support about what I just told you?"
 					break
 				case "getDevelopmentOperationsCreate":
@@ -420,6 +424,7 @@ public class SessionSpeechlet implements Speechlet {
             speechText = "I need more information to page support, sorry!"
             isAskResponse = false
         }
+        sendSupportMessage("User issue reported: " + speechText - "Paging support,")
 
         return getSpeechletResponse(speechText, "", isAskResponse)
     }
@@ -525,7 +530,7 @@ public class SessionSpeechlet implements Speechlet {
 
         if (item.state == "setModeOp" || item.state == "setModeDev") {
             return setModeInSession(session)
-        } else if (item.state == "getOperationalData") {
+        } else if (item.state == "getOperationalData" || item.state=="sendOperationalRequest") {
             return getOperationalData(sessionData, session)
         } else if (item.state=="getDevelopmentOperations" || item.state =="getDevelopmentOperationsCreate" || item.state=="getDevelopmentOperationsConfig" ) {
             return getDevelopmentOperations(sessionData, session)
@@ -533,7 +538,7 @@ public class SessionSpeechlet implements Speechlet {
             return setDevelopmentTasks(sessionData, session)
         } else {
 
-            return getSpeechletResponse("Sorry, I dont know where to resume from, please start over.", "", false)
+            return getSpeechletResponse("Sorry, I don't know where to resume from, please start over.", "", false)
         }
 
 
@@ -618,6 +623,11 @@ public class SessionSpeechlet implements Speechlet {
 
 
         return response.json
+    }
+
+    private def sendSupportMessage(def message){
+        SlackApi api = new SlackApi("https://hooks.slack.com/services/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")
+        api.call(new SlackMessage(message))
     }
 }
 
