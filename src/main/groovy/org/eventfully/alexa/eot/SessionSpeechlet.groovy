@@ -219,7 +219,7 @@ public class SessionSpeechlet implements Speechlet {
             queryParams['direction'] = dir
         }
         if (desc) {
-            queryParams['partner'] = desc
+            queryParams['s'] = desc
         }
         queryParams['interval'] = 'today'
 
@@ -337,8 +337,8 @@ public class SessionSpeechlet implements Speechlet {
 				if (currentOperation == 'create'){
 					session.setAttribute("state", "getDevelopmentOperationsCreate")
 					//ToDo, get next INT ID from backend (svn, github?)
-					speechText = "Creating a new integration for you. Configure it by adding components"
-					repromptText = "Which component?"
+					speechText = "Creating a new integration for you. Configure it by adding components, which component do you want to add?"
+					repromptText = "Which component do you want to add?"
 					session.setAttribute(DEV_KEY, "DEV")
 
 				} else if (currentOperation == 'configure' ){
@@ -464,7 +464,6 @@ public class SessionSpeechlet implements Speechlet {
 
 
         } else {
-            // Render an error since we don't know what the users favorite color is.
             speechText = "I'm not sure what you want to work with, please try again"
 
         }
@@ -473,20 +472,12 @@ public class SessionSpeechlet implements Speechlet {
     }
 	private SpeechletResponse setDevelopmentTasks(def sessionData, final Session session) {
 		session.setAttribute("state", "setDevelopmentTasks")
-		
 		String speechText, repromptText
 	
 		def myConfig = session.getAttribute('createConfig')
-                //sessionData["createConfig"]
-        //session.setAttribute("createConfig", myConfig)
         session.setAttribute(DEV_KEY, "DEV")
 
         speechText = "The integration is configured with: " + myConfig.join(',') + ". Anything else?"
-
-
-
-
-
 
 
 		return getSpeechletResponse(speechText, repromptText, true)
