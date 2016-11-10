@@ -219,7 +219,7 @@ public class SessionSpeechlet implements Speechlet {
             queryParams['direction'] = dir
         }
         if (desc) {
-            queryParams['s'] = desc
+            queryParams['partner'] = desc
         }
         queryParams['interval'] = 'today'
 
